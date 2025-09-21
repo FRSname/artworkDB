@@ -1,1 +1,31 @@
-{% extends 'base.html' %}{% block content %}<h1>Edit</h1>{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<h1>Edit artwork – {{ a.artwork_id }}</h1>
+<form action="/artworks/{{ a.artwork_id }}/edit" method="post">
+  <label>Title *</label>
+  <input name="title" required value="{{ a.title }}">
+
+  <div class="row">
+    <div><label>Year</label><input name="year" value="{{ a.year }}"></div>
+    <div><label>Medium</label><input name="medium" value="{{ a.medium }}"></div>
+    <div><label>Surface</label><input name="surface" value="{{ a.surface }}"></div>
+  </div>
+
+  <div class="row">
+    <div><label>Width (cm)</label><input type="number" step="0.1" name="width_cm" value="{{ a.width_cm }}"></div>
+    <div><label>Height (cm)</label><input type="number" step="0.1" name="height_cm" value="{{ a.height_cm }}"></div>
+    <div><label>Depth (cm)</label><input type="number" step="0.1" name="depth_cm" value="{{ a.depth_cm }}"></div>
+  </div>
+
+  <label>Description</label>
+  <textarea name="description">{{ a.description }}</textarea>
+
+  <label>Keywords</label>
+  <input name="keywords" value="{{ a.keywords }}">
+
+  <div style="margin-top:16px">
+    <button class="btn" type="submit">Save changes</button>
+    <a class="btn" href="/artworks/{{ a.artwork_id }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,16 +1,17 @@
-# Art Catalog (Simple)
+# Art Catalog (Simple) – Docker web app
 
-## Run
+Fields: **Title**, **Artist (fixed: Vladislav Raszyk)**, **Year**, **Medium**, **Surface**, **Dimensions (cm)**, **Description**, **Keywords**.
+
+## Quick start
 ```bash
 docker compose up --build -d
 # open http://localhost:8000
 ```
+- New artwork form: `/artworks/new`
+- List + search: `/`
+- Detail: `/artworks/{artwork_id}`
+- One-pager PDF: `/artworks/{artwork_id}/onepager.pdf`
 
-## API endpoints
-- GET /api/artworks
-- GET /api/artworks/{id}
-- POST /api/artworks
-- POST /api/artworks/{id}/images-json
-- DELETE /api/artworks/{id}
-
-Auth: optional header `X-API-Key` if `API_KEY` is set in compose.
+### Volumes
+- `./data/` holds the SQLite database (persisted)
+- `./app/media/` holds uploaded images

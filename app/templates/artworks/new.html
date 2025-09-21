@@ -1,1 +1,34 @@
-{% extends 'base.html' %}{% block content %}<h1>New</h1>{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<h1>New artwork</h1>
+<form action="/artworks" method="post" enctype="multipart/form-data">
+  <label>Artwork ID (leave blank to auto-generate)</label>
+  <input name="artwork_id" placeholder="A0001">
+
+  <label>Title *</label>
+  <input name="title" required placeholder="Title">
+
+  <div class="row">
+    <div><label>Year</label><input name="year" placeholder="2023"></div>
+    <div><label>Medium</label><input name="medium" placeholder="Oil on canvas"></div>
+    <div><label>Surface</label><input name="surface" placeholder="Canvas / Board / Paper"></div>
+  </div>
+
+  <div class="row">
+    <div><label>Width (cm)</label><input type="number" step="0.1" name="width_cm" min="0" value="0"></div>
+    <div><label>Height (cm)</label><input type="number" step="0.1" name="height_cm" min="0" value="0"></div>
+    <div><label>Depth (cm)</label><input type="number" step="0.1" name="depth_cm" min="0" value="0"></div>
+  </div>
+
+  <label>Description</label>
+  <textarea name="description" placeholder="Short description..."></textarea>
+
+  <label>Keywords</label>
+  <input name="keywords" placeholder="comma, separated, tags">
+
+  <label>Primary image (JPG/PNG)</label>
+  <input type="file" name="image" accept="image/*">
+
+  <div style="margin-top:16px"><button class="btn" type="submit">Save artwork</button></div>
+</form>
+{% endblock %}
