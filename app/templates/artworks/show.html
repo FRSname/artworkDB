@@ -1,57 +1,124 @@
 {% extends "base.html" %}
+
+{% block title %}{{ artwork.title }} - Art Catalog{% endblock %}
+
 {% block content %}
-<article>
-  <h1>{{ a.title }}</h1>
-  <div style="margin:8px 0; display:flex; gap:8px; flex-wrap:wrap">
-    <form action="/artworks/{{ a.artwork_id }}/delete" method="post" onsubmit="return confirm('Really delete this artwork?')">
-      <button class="btn" type="submit" style="background:#dc2626;color:#fff">Delete</button>
-    </form>
-    <a class="btn" href="/artworks/{{ a.artwork_id }}/edit">Edit</a>
-    <a class="btn" href="/artworks/{{ a.artwork_id }}/onepager.pdf" target="_blank">One-pager (PDF)</a>
-  </div>
-  <div class="muted">Vladislav Raszyk · {{ a.year }}</div>
-  {% if a.primary_image %}
-    <img style="max-width:100%;height:auto;margin:16px 0" src="{{ a.primary_image }}" alt="{{ a.title }}">
-  {% endif %}
-  <dl style="display:grid;grid-template-columns:160px 1fr;gap:6px 12px">
-    <dt>Year</dt><dd>{{ a.year }}</dd>
-    <dt>Medium</dt><dd>{{ a.medium }}</dd>
-    <dt>Surface</dt><dd>{{ a.surface }}</dd>
-    <dt>Size (cm)</dt><dd>{{ a.width_cm }} × {{ a.height_cm }} × {{ a.depth_cm }}</dd>
-    <dt>Keywords</dt><dd>{{ a.keywords }}</dd>
-  </dl>
-  {% if a.description %}
-    <h2>Description</h2>
-    <p>{{ a.description }}</p>
-  {% endif %}
+<div class="row">
+    <div class="col-lg-8">
+        {% if artwork.primary_image %}
+        <div class="card mb-4">
+            <img src="{{ artwork.primary_image }}" class="card-img-top" alt="{{ artwork.title }}" 
+                 style="max-height: 600px; object-fit: contain; background-color: #f8f9fa;">
+        </div>
+        {% endif %}
 
-  <h2>Gallery</h2>
-  {% if images %}
-  <div class="grid">
-    {% for img in images %}
-    <div class="card">
-      <img class="thumb" src="{{ img.thumb or img.path }}" alt="{{ a.title }} detail">
-      <div style="padding:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <form action="/artworks/{{ a.artwork_id }}/images/{{ img.id }}/make-primary" method="post">
-          <button class="btn" type="submit">Make primary</button>
-        </form>
-        <a class="btn" href="{{ img.path }}" target="_blank">Open</a>
-        <form action="/artworks/{{ a.artwork_id }}/images/{{ img.id }}/delete" method="post" onsubmit="return confirm('Delete this image?')">
-          <button class="btn" type="submit">Delete</button>
-        </form>
-      </div>
+        {% if images|length > 1 %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Additional Images</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for image in images %}
+                        {% if image.view != 'primary' %}
+                        <div class="col-md-4 mb-3">
+                            <img src="{{ image.path }}" class="img-fluid rounded" alt="Detail view">
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
-    {% endfor %}
-  </div>
-  {% else %}
-    <p class="muted">No additional images yet.</p>
-  {% endif %}
 
-  <h3 style="margin-top:20px">Add more images</h3>
-  <form action="/artworks/{{ a.artwork_id }}/images" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="view" value="detail">
-    <input type="file" name="files" accept="image/*" multiple>
-    <div style="margin-top:8px"><button class="btn" type="submit">Upload</button></div>
-  </form>
-</article>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">{{ artwork.title }}</h4>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Artist:</dt>
+                    <dd class="col-sm-8">{{ artwork.artist_name }}</dd>
+                    
+                    <dt class="col-sm-4">ID:</dt>
+                    <dd class="col-sm-8">{{ artwork.artwork_id }}</dd>
+                    
+                    {% if artwork.year %}
+                    <dt class="col-sm-4">Year:</dt>
+                    <dd class="col-sm-8">{{ artwork.year }}</dd>
+                    {% endif %}
+                    
+                    {% if artwork.medium %}
+                    <dt class="col-sm-4">Medium:</dt>
+                    <dd class="col-sm-8">{{ artwork.medium }}</dd>
+                    {% endif %}
+                    
+                    {% if artwork.surface %}
+                    <dt class="col-sm-4">Surface:</dt>
+                    <dd class="col-sm-8">{{ artwork.surface }}</dd>
+                    {% endif %}
+                    
+                    {% if artwork.width_cm > 0 or artwork.height_cm > 0 %}
+                    <dt class="col-sm-4">Size:</dt>
+                    <dd class="col-sm-8">
+                        {{ artwork.width_cm }} × {{ artwork.height_cm }}{% if artwork.depth_cm > 0 %} × {{ artwork.depth_cm }}{% endif %} cm
+                    </dd>
+                    {% endif %}
+                </dl>
+                
+                {% if artwork.description %}
+                <h6>Description:</h6>
+                <p class="text-muted">{{ artwork.description }}</p>
+                {% endif %}
+                
+                {% if artwork.keywords %}
+                <h6>Keywords:</h6>
+                <p class="text-muted">{{ artwork.keywords }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="card-footer">
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="/artworks/{{ artwork.artwork_id }}/edit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="/artworks/{{ artwork.artwork_id }}/pdf" class="btn btn-success btn-sm">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+                <div class="mt-2">
+                    <a href="/artworks" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete "{{ artwork.title }}"? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="/artworks/{{ artwork.artwork_id }}/delete" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

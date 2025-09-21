@@ -1,28 +1,59 @@
 {% extends "base.html" %}
-{% block content %}
-<h1>Artworks</h1>
-<form method="get" style="margin:12px 0;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:end">
-  <div><label>Query</label><input name="q" value="{{ (filters.q if filters else '') }}" placeholder="Title, medium, keywords"></div>
-  <div><label>Year from</label><input name="year_from" value="{{ (filters.year_from if filters else '') }}"></div>
-  <div><label>Year to</label><input name="year_to" value="{{ (filters.year_to if filters else '') }}"></div>
-  <div><button class="btn" type="submit">Search</button></div>
-  <div><a class="btn" href="/">Reset</a></div>
-</form>
 
-<div class="grid">
-  {% for a in artworks %}
-  <a class="card" href="/artworks/{{a.artwork_id}}">
-    {% if a.primary_image %}
-      <img class="thumb" src="{{ a.primary_image }}" alt="{{ a.title }}">
-    {% else %}
-      <div class="thumb"></div>
-    {% endif %}
-    <div style="padding:12px">
-      <div><strong>{{ a.title }}</strong></div>
-      <div class="muted">Vladislav Raszyk · {{ a.year }}</div>
-      <div class="muted">{{ a.medium }}</div>
-    </div>
-  </a>
-  {% endfor %}
+{% block title %}{{ page_title }} - Art Catalog{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ page_title }}</h1>
+    <a href="/artworks/new" class="btn btn-success">
+        <i class="fas fa-plus"></i> Add New Artwork
+    </a>
 </div>
+
+{% if artworks %}
+<div class="row">
+    {% for artwork in artworks %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-start">
+                    {% if artwork.primary_image %}
+                    <img src="{{ artwork.primary_image }}" alt="{{ artwork.title }}" class="artwork-thumbnail me-3 flex-shrink-0">
+                    {% else %}
+                    <div class="artwork-thumbnail me-3 flex-shrink-0 bg-light d-flex align-items-center justify-content-center">
+                        <i class="fas fa-image text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <div class="flex-grow-1">
+                        <h5 class="card-title mb-1">{{ artwork.title }}</h5>
+                        <p class="text-muted mb-1">{{ artwork.artist_name }}</p>
+                        <small class="text-muted">{{ artwork.artwork_id }}</small>
+                        {% if artwork.year %}
+                        <small class="text-muted"> • {{ artwork.year }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="/artworks/{{ artwork.artwork_id }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    <a href="/artworks/{{ artwork.artwork_id }}/edit" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-palette fa-4x text-muted mb-3"></i>
+    <h3>No artworks yet</h3>
+    <p class="text-muted">Start building your catalog by adding your first artwork.</p>
+    <a href="/artworks/new" class="btn btn-success">
+        <i class="fas fa-plus"></i> Add First Artwork
+    </a>
+</div>
+{% endif %}
 {% endblock %}

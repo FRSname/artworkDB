@@ -4,11 +4,11 @@ services:
     build: .
     container_name: artcatalog-simple
     ports:
-      - "8000:8000"
+      - "9000:8000"
     environment:
       - APP_ENV=production
       - TZ=Europe/Prague
     volumes:
-      - ./data:/app/data
-      - ./app/media:/app/app/media
+      - /opt/artworkDB/data:/app/data
+      - /opt/artworkDB/app/media:/app/app/media
     restart: unless-stopped

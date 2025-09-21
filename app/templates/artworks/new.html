@@ -1,34 +1,117 @@
 {% extends "base.html" %}
+
+{% block title %}Add New Artwork - Art Catalog{% endblock %}
+
 {% block content %}
-<h1>New artwork</h1>
-<form action="/artworks" method="post" enctype="multipart/form-data">
-  <label>Artwork ID (leave blank to auto-generate)</label>
-  <input name="artwork_id" placeholder="A0001">
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">
+                    <i class="fas fa-plus"></i> Add New Artwork
+                </h2>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="artwork_id" class="form-label">Artwork ID</label>
+                                <input type="text" class="form-control" id="artwork_id" name="artwork_id" 
+                                       value="{{ next_artwork_id }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="year" class="form-label">Year</label>
+                                <input type="text" class="form-control" id="year" name="year">
+                            </div>
+                        </div>
+                    </div>
 
-  <label>Title *</label>
-  <input name="title" required placeholder="Title">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
 
-  <div class="row">
-    <div><label>Year</label><input name="year" placeholder="2023"></div>
-    <div><label>Medium</label><input name="medium" placeholder="Oil on canvas"></div>
-    <div><label>Surface</label><input name="surface" placeholder="Canvas / Board / Paper"></div>
-  </div>
+                    <div class="mb-3">
+                        <label for="artist_name" class="form-label">Artist Name</label>
+                        <input type="text" class="form-control" id="artist_name" name="artist_name" 
+                               value="Vladislav Raszyk" required>
+                    </div>
 
-  <div class="row">
-    <div><label>Width (cm)</label><input type="number" step="0.1" name="width_cm" min="0" value="0"></div>
-    <div><label>Height (cm)</label><input type="number" step="0.1" name="height_cm" min="0" value="0"></div>
-    <div><label>Depth (cm)</label><input type="number" step="0.1" name="depth_cm" min="0" value="0"></div>
-  </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="medium" class="form-label">Medium</label>
+                                <input type="text" class="form-control" id="medium" name="medium" 
+                                       placeholder="Oil, Acrylic, Watercolor, etc.">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="surface" class="form-label">Surface</label>
+                                <input type="text" class="form-control" id="surface" name="surface" 
+                                       placeholder="Canvas, Paper, Wood, etc.">
+                            </div>
+                        </div>
+                    </div>
 
-  <label>Description</label>
-  <textarea name="description" placeholder="Short description..."></textarea>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="width_cm" class="form-label">Width (cm)</label>
+                                <input type="number" class="form-control" id="width_cm" name="width_cm" 
+                                       step="0.1" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="height_cm" class="form-label">Height (cm)</label>
+                                <input type="number" class="form-control" id="height_cm" name="height_cm" 
+                                       step="0.1" min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="depth_cm" class="form-label">Depth (cm)</label>
+                                <input type="number" class="form-control" id="depth_cm" name="depth_cm" 
+                                       step="0.1" min="0">
+                            </div>
+                        </div>
+                    </div>
 
-  <label>Keywords</label>
-  <input name="keywords" placeholder="comma, separated, tags">
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
 
-  <label>Primary image (JPG/PNG)</label>
-  <input type="file" name="image" accept="image/*">
+                    <div class="mb-3">
+                        <label for="keywords" class="form-label">Keywords</label>
+                        <input type="text" class="form-control" id="keywords" name="keywords" 
+                               placeholder="landscape, portrait, abstract, etc.">
+                    </div>
 
-  <div style="margin-top:16px"><button class="btn" type="submit">Save artwork</button></div>
-</form>
+                    <div class="mb-3">
+                        <label for="images" class="form-label">Images</label>
+                        <input type="file" class="form-control" id="images" name="images" 
+                               multiple accept="image/*">
+                        <div class="form-text">
+                            First image will be the primary image. You can upload multiple images.
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="/artworks" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to List
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Create Artwork
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
