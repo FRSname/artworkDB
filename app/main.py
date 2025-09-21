@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
+import os, base64, requests
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
@@ -24,6 +25,31 @@ templates = Jinja2Templates(directory=str(BASE / "templates"))
 def on_startup():
     init_db()
 
+# -------- helpers --------
+def _check_api_key(request: Request) -> bool:
+    api_key_env = os.getenv("API_KEY", "").strip()
+    if not api_key_env:
+        return True  # open if not configured
+    supplied = request.headers.get("X-API-Key", "")
+    return supplied == api_key_env
+
+def _bytes_from_payload(image_base64: str | None, image_url: str | None) -> bytes | None:
+    data = None
+    if image_base64:
+        try:
+            data = base64.b64decode(image_base64)
+        except Exception:
+            data = None
+    elif image_url:
+        try:
+            r = requests.get(image_url, timeout=20)
+            if r.ok:
+                data = r.content
+        except Exception:
+            data = None
+    return data
+
+# -------- UI routes --------
 @app.get("/")
 def index(request: Request, q: str | None = None, year_from: str | None = None, year_to: str | None = None):
     from sqlmodel import and_, or_
@@ -32,7 +58,13 @@ def index(request: Request, q: str | None = None, year_from: str | None = None, 
         conds = []
         if q:
             like = f"%{q.strip()}%"
-            conds.append(or_(Artwork.title.like(like), Artwork.medium.like(like), Artwork.surface.like(like), Artwork.description.like(like), Artwork.keywords.like(like)))
+            conds.append(or_(
+                Artwork.title.like(like),
+                Artwork.medium.like(like),
+                Artwork.surface.like(like),
+                Artwork.description.like(like),
+                Artwork.keywords.like(like)
+            ))
         if year_from:
             conds.append(Artwork.year >= year_from)
         if year_to:
@@ -187,6 +219,29 @@ def make_primary_image(artwork_id: str, image_id: int):
             s.commit()
     return RedirectResponse(url=f"/artworks/{artwork_id}", status_code=303)
 
+@app.post("/artworks/{artwork_id}/delete")
+def delete_artwork(artwork_id: str):
+    with get_session() as s:
+        a = s.exec(select(Artwork).where(Artwork.artwork_id == artwork_id)).first()
+        if a:
+            imgs = s.exec(select(Image).where(Image.artwork_id == artwork_id)).all()
+            for img in imgs:
+                p = Path(img.path.replace("/media", str(MEDIA_ROOT)))
+                t = Path(img.thumb.replace("/media", str(MEDIA_ROOT)))
+                try:
+                    if p.exists(): p.unlink()
+                    if t.exists(): t.unlink()
+                except Exception:
+                    pass
+                s.delete(img)
+            folder = MEDIA_ROOT / "artworks" / artwork_id
+            if folder.exists():
+                import shutil as _shutil
+                _shutil.rmtree(folder, ignore_errors=True)
+            s.delete(a)
+            s.commit()
+    return RedirectResponse(url="/", status_code=303)
+
 def _onepager_path(artwork_id: str) -> Path:
     out_dir = Path("/app/data/onepagers")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -204,12 +259,8 @@ def onepager_pdf(artwork_id: str):
     W, H = A4
     x, y = 20*mm, H - 20*mm
 
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(x, y, a.title)
-    y -= 8*mm
-    c.setFont("Helvetica", 12)
-    c.drawString(x, y, f"{a.artist_name} · {a.year}")
-    y -= 10*mm
+    c.setFont("Helvetica-Bold", 18); c.drawString(x, y, a.title); y -= 8*mm
+    c.setFont("Helvetica", 12); c.drawString(x, y, f"{a.artist_name} · {a.year}"); y -= 10*mm
 
     if a.primary_image:
         img_path = Path(a.primary_image.replace("/media", str(MEDIA_ROOT)))
@@ -249,27 +300,120 @@ def onepager_pdf(artwork_id: str):
     c.showPage(); c.save()
     return FileResponse(str(p), media_type="application/pdf", filename=f"{artwork_id}.pdf")
 
-@app.post("/artworks/{artwork_id}/delete")
-def delete_artwork(artwork_id: str):
+# -------- JSON API for n8n --------
+@app.get("/api/artworks")
+def api_list_artworks(request: Request):
+    if not _check_api_key(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    with get_session() as s:
+        items = s.exec(select(Artwork).order_by(Artwork.id.desc())).all()
+        return items
+
+@app.get("/api/artworks/{artwork_id}")
+def api_get_artwork(artwork_id: str, request: Request):
+    if not _check_api_key(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     with get_session() as s:
         a = s.exec(select(Artwork).where(Artwork.artwork_id == artwork_id)).first()
-        if a:
-            # delete associated images
-            imgs = s.exec(select(Image).where(Image.artwork_id == artwork_id)).all()
-            for img in imgs:
-                p = Path(img.path.replace("/media", str(MEDIA_ROOT)))
-                t = Path(img.thumb.replace("/media", str(MEDIA_ROOT)))
-                try:
-                    if p.exists(): p.unlink()
-                    if t.exists(): t.unlink()
-                except Exception:
-                    pass
-                s.delete(img)
-            # delete artwork folder
-            folder = MEDIA_ROOT / "artworks" / artwork_id
-            if folder.exists():
-                import shutil
-                shutil.rmtree(folder, ignore_errors=True)
-            s.delete(a)
-            s.commit()
-    return RedirectResponse(url="/", status_code=303)
+        if not a:
+            return JSONResponse({"error":"not found"}, status_code=404)
+        return a
+
+@app.post("/api/artworks")
+async def api_create_artwork(request: Request):
+    if not _check_api_key(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    payload = await request.json()
+    title = (payload.get("title") or "").strip()
+    if not title:
+        return JSONResponse({"error": "title is required"}, status_code=400)
+    artwork_id = (payload.get("artwork_id") or "").strip()
+    year = (payload.get("year") or "").strip()
+    medium = (payload.get("medium") or "").strip()
+    surface = (payload.get("surface") or "").strip()
+    width_cm = float(payload.get("width_cm") or 0)
+    height_cm = float(payload.get("height_cm") or 0)
+    depth_cm = float(payload.get("depth_cm") or 0)
+    description = (payload.get("description") or "").strip()
+    keywords = (payload.get("keywords") or "").strip()
+    image_b64 = payload.get("primary_image_base64")
+    image_url = payload.get("primary_image_url")
+
+    if not artwork_id:
+        n = next_artwork_number(MEDIA_ROOT)
+        artwork_id = ensure_artwork_id(n)
+
+    primary_image_rel = ""
+    img_bytes = _bytes_from_payload(image_b64, image_url)
+    if img_bytes:
+        dest_dir = MEDIA_ROOT / "artworks" / artwork_id
+        base_name = f"{artwork_id}_front"
+        primary_image_rel, _ = save_image_and_thumb(img_bytes, dest_dir, base_name)
+
+    slug = mk_slug(title, "Vladislav Raszyk")
+
+    a = Artwork(
+        artwork_id=artwork_id,
+        title=title,
+        artist_name="Vladislav Raszyk",
+        year=year,
+        medium=medium,
+        surface=surface,
+        width_cm=width_cm, height_cm=height_cm, depth_cm=depth_cm,
+        description=description, keywords=keywords,
+        primary_image=primary_image_rel, web_slug=slug
+    )
+    with get_session() as s:
+        s.add(a)
+        s.commit()
+    return JSONResponse({"ok": True, "artwork_id": artwork_id}, status_code=201)
+
+@app.post("/api/artworks/{artwork_id}/images-json")
+async def api_add_image(artwork_id: str, request: Request):
+    if not _check_api_key(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    payload = await request.json()
+    view = (payload.get("view") or "detail").strip()
+    image_b64 = payload.get("image_base64")
+    image_url = payload.get("image_url")
+    img_bytes = _bytes_from_payload(image_b64, image_url)
+    if not img_bytes:
+        return JSONResponse({"error": "image_base64 or image_url required"}, status_code=400)
+
+    dest_dir = MEDIA_ROOT / "artworks" / artwork_id
+    idx = next_image_index(dest_dir, artwork_id)
+    base_name = f"{artwork_id}_detail{idx}"
+    rel, rel_thumb = save_image_and_thumb(img_bytes, dest_dir, base_name)
+
+    with get_session() as s:
+        a = s.exec(select(Artwork).where(Artwork.artwork_id == artwork_id)).first()
+        if not a:
+            return JSONResponse({"error":"not found"}, status_code=404)
+        img = Image(artwork_id=artwork_id, path=rel, thumb=rel_thumb, view=view, order_index=idx)
+        s.add(img); s.commit()
+    return JSONResponse({"ok": True, "path": rel}, status_code=201)
+
+@app.delete("/api/artworks/{artwork_id}")
+def api_delete_artwork(artwork_id: str, request: Request):
+    if not _check_api_key(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    with get_session() as s:
+        a = s.exec(select(Artwork).where(Artwork.artwork_id == artwork_id)).first()
+        if not a:
+            return JSONResponse({"error":"not found"}, status_code=404)
+        imgs = s.exec(select(Image).where(Image.artwork_id == artwork_id)).all()
+        for img in imgs:
+            p = Path(img.path.replace("/media", str(MEDIA_ROOT)))
+            t = Path(img.thumb.replace("/media", str(MEDIA_ROOT)))
+            try:
+                if p.exists(): p.unlink()
+                if t.exists(): t.unlink()
+            except Exception:
+                pass
+            s.delete(img)
+        folder = MEDIA_ROOT / "artworks" / artwork_id
+        if folder.exists():
+            import shutil as _shutil
+            _shutil.rmtree(folder, ignore_errors=True)
+        s.delete(a); s.commit()
+    return JSONResponse({"ok": True})
