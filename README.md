@@ -1,17 +1,20 @@
-# Art Catalog (Simple) – Docker web app
+# Art Catalog App
 
-Fields: **Title**, **Artist (fixed: Vladislav Raszyk)**, **Year**, **Medium**, **Surface**, **Dimensions (cm)**, **Description**, **Keywords**.
+A simple FastAPI-based web application for cataloging artworks with image management and PDF export capabilities.
 
-## Quick start
+## Features
+
+- 🎨 **Web UI** for artwork management
+- 📸 **Image handling** with automatic thumbnail generation
+- 📄 **PDF export** for individual artworks
+- 🔗 **REST API** for programmatic access
+- 🐳 **Docker** ready with docker-compose
+- 🗃️ **SQLite** database for simplicity
+- 🔍 **Search** and filtering capabilities
+
+## Quick Start
+
+1. **Clone/Download** this project
+2. **Run with Docker:**
 ```bash
-docker compose up --build -d
-# open http://localhost:8000
-```
-- New artwork form: `/artworks/new`
-- List + search: `/`
-- Detail: `/artworks/{artwork_id}`
-- One-pager PDF: `/artworks/{artwork_id}/onepager.pdf`
-
-### Volumes
-- `./data/` holds the SQLite database (persisted)
-- `./app/media/` holds uploaded images
+   docker-compose up -d
