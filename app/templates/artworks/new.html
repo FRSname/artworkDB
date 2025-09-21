@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>New artwork</h1>
+<form action="/artworks" method="post" enctype="multipart/form-data">
+  <label>Artwork ID (leave blank to auto-generate)</label>
+  <input name="artwork_id" placeholder="A0001">
+
+  <label>Title *</label>
+  <input name="title" required placeholder="Untitled">
+
+  <label>Artist</label>
+  <input name="artist_name" placeholder="Artist name">
+
+  <div class="row">
+    <div>
+      <label>Year</label>
+      <input name="year" placeholder="2023">
+    </div>
+    <div>
+      <label>Medium</label>
+      <input name="medium" placeholder="Oil on canvas">
+    </div>
+    <div>
+      <label>Surface</label>
+      <input name="surface" placeholder="Canvas / Board / Paper">
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>Width (mm)</label>
+      <input type="number" name="width_mm" min="0" value="0">
+    </div>
+    <div>
+      <label>Height (mm)</label>
+      <input type="number" name="height_mm" min="0" value="0">
+    </div>
+    <div>
+      <label>Depth (mm)</label>
+      <input type="number" name="depth_mm" min="0" value="0">
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>Framed width (mm)</label>
+      <input type="number" name="framed_width_mm" min="0" value="0">
+    </div>
+    <div>
+      <label>Framed height (mm)</label>
+      <input type="number" name="framed_height_mm" min="0" value="0">
+    </div>
+    <div>
+      <label>Framed depth (mm)</label>
+      <input type="number" name="framed_depth_mm" min="0" value="0">
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>Edition</label>
+      <input name="edition" placeholder="Unique / 1/25 ...">
+    </div>
+    <div>
+      <label>Series</label>
+      <input name="series" placeholder="Series">
+    </div>
+    <div>
+      <label>Style</label>
+      <input name="style" placeholder="Contemporary">
+    </div>
+  </div>
+
+  <label>Subject keywords</label>
+  <input name="subject_keywords" placeholder="tag1, tag2, tag3">
+
+  <div class="row">
+    <div>
+      <label>Provenance</label>
+      <input name="provenance" placeholder="Artist studio / Private collection ...">
+    </div>
+    <div>
+      <label>Location</label>
+      <input name="location" placeholder="Rack A-03">
+    </div>
+    <div>
+      <label>Inventory code</label>
+      <input name="inventory_code" placeholder="2025-001">
+    </div>
+  </div>
+
+  <label>Primary image (JPG/PNG)</label>
+  <input type="file" name="image" accept="image/*">
+
+  <div style="margin-top:16px">
+    <button class="btn" type="submit">Save artwork</button>
+  </div>
+</form>
+{% endblock %}
