@@ -511,18 +511,18 @@ async def api_create_artwork(payload: CreateArtwork, request: Request):
 @app.post("/api/artworks-multipart")
 async def api_create_artwork_multipart(
     request: Request,
-    title: Annotated[str, Form(...)],
-    artwork_id: Annotated[Optional[str], Form(None)] = None,
-    year: Annotated[str, Form("")] = "",
-    medium: Annotated[str, Form("")] = "",
-    surface: Annotated[str, Form("")] = "",
-    width_cm: Annotated[float, Form(0.0)] = 0.0,
-    height_cm: Annotated[float, Form(0.0)] = 0.0,
-    depth_cm: Annotated[float, Form(0.0)] = 0.0,
-    description: Annotated[str, Form("")] = "",
-    keywords: Annotated[str, Form("")] = "",
-    primary_image_base64: Annotated[Optional[str], Form(None)] = None,
-    primary_image_url: Annotated[Optional[str], Form(None)] = None,
+    title: Annotated[str, Form()],
+    artwork_id: Annotated[str, Form()] = None,
+    year: Annotated[str, Form()] = "",
+    medium: Annotated[str, Form()] = "",
+    surface: Annotated[str, Form()] = "",
+    width_cm: Annotated[float, Form()] = 0.0,
+    height_cm: Annotated[float, Form()] = 0.0,
+    depth_cm: Annotated[float, Form()] = 0.0,
+    description: Annotated[str, Form()] = "",
+    keywords: Annotated[str, Form()] = "",
+    primary_image_base64: Annotated[str, Form()] = None,
+    primary_image_url: Annotated[str, Form()] = None,
 ):
     # internally call the same logic as the JSON route
     payload = CreateArtwork(
