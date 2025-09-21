@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Art Catalog</title>
+  <title>Art Catalog (Simple)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root{--pad:16px;--gap:12px;--muted:#6b7280}
@@ -19,14 +19,13 @@
     form label{display:block;margin-top:10px;font-weight:600}
     form input, form select, form textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:6px}
     form .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--gap)}
+    textarea{min-height:120px}
   </style>
 </head>
 <body>
   <header>
-    <a href="/"><strong>Art Catalog</strong></a>
-    <nav>
-      <a class="btn" href="/artworks/new">+ New artwork</a>
-    </nav>
+    <a href="/"><strong>Art Catalog</strong><span class="muted"> (Simple)</span></a>
+    <nav><a class="btn" href="/artworks/new">+ New artwork</a></nav>
   </header>
   <main>
     {% block content %}{% endblock %}

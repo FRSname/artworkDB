@@ -1,15 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Artworks</h1>
-<form method="get" style="margin:12px 0;display:grid;grid-template-columns:repeat(6,1fr);gap:8px;align-items:end">
-  <div><label>Query</label><input name="q" value="{{ (filters.q if filters else '') }}"></div>
-  <div><label>Artist</label><input name="artist" value="{{ (filters.artist if filters else '') }}"></div>
-  <div><label>Style</label><input name="style" value="{{ (filters.style if filters else '') }}"></div>
+<form method="get" style="margin:12px 0;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:end">
+  <div><label>Query</label><input name="q" value="{{ (filters.q if filters else '') }}" placeholder="Title, medium, keywords"></div>
   <div><label>Year from</label><input name="year_from" value="{{ (filters.year_from if filters else '') }}"></div>
   <div><label>Year to</label><input name="year_to" value="{{ (filters.year_to if filters else '') }}"></div>
-  <div></div>
-  <div><label>Min width (mm)</label><input type="number" name="min_width_mm" value="{{ (filters.min_width_mm if filters else '') }}"></div>
-  <div><label>Max width (mm)</label><input type="number" name="max_width_mm" value="{{ (filters.max_width_mm if filters else '') }}"></div>
   <div><button class="btn" type="submit">Search</button></div>
   <div><a class="btn" href="/">Reset</a></div>
 </form>
@@ -24,7 +19,7 @@
     {% endif %}
     <div style="padding:12px">
       <div><strong>{{ a.title }}</strong></div>
-      <div class="muted">{{ a.artist_name }} · {{ a.year }}</div>
+      <div class="muted">Vladislav Raszyk · {{ a.year }}</div>
       <div class="muted">{{ a.medium }}</div>
     </div>
   </a>

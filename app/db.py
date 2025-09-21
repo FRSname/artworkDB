@@ -10,24 +10,16 @@ class Artwork(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     artwork_id: str = Field(index=True, unique=True)
     title: str
-    artist_name: str = ""
+    artist_name: str = "Vladislav Raszyk"
     year: str = ""
     medium: str = ""
     surface: str = ""
-    width_mm: int = 0
-    height_mm: int = 0
-    depth_mm: int = 0
-    framed_width_mm: int = 0
-    framed_height_mm: int = 0
-    framed_depth_mm: int = 0
-    edition: str = "Unique"
-    series: str = ""
-    style: str = ""
-    subject_keywords: str = ""
-    provenance: str = ""
-    location: str = ""
-    inventory_code: str = ""
-    primary_image: str = ""  # relative path under /media
+    width_cm: float = 0.0
+    height_cm: float = 0.0
+    depth_cm: float = 0.0
+    description: str = ""
+    keywords: str = ""
+    primary_image: str = ""
     web_slug: str = Field(index=True, default="")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 

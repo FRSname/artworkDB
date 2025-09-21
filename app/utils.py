@@ -26,7 +26,6 @@ def save_image_and_thumb(image_bytes: bytes, dest_dir: Path, base_name: str) -> 
     img_path = dest_dir / f"{base_name}.jpg"
     with open(img_path, "wb") as f:
         f.write(image_bytes)
-    # process & thumb
     thumb_dir = dest_dir / "thumbs"
     thumb_dir.mkdir(exist_ok=True)
     thumb_path = thumb_dir / f"{base_name}_thumb.jpg"

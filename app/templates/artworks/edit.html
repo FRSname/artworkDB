@@ -5,50 +5,23 @@
   <label>Title *</label>
   <input name="title" required value="{{ a.title }}">
 
-  <label>Artist</label>
-  <input name="artist_name" value="{{ a.artist_name }}">
-
   <div class="row">
-    <div>
-      <label>Year</label>
-      <input name="year" value="{{ a.year }}">
-    </div>
-    <div>
-      <label>Medium</label>
-      <input name="medium" value="{{ a.medium }}">
-    </div>
-    <div>
-      <label>Surface</label>
-      <input name="surface" value="{{ a.surface }}">
-    </div>
+    <div><label>Year</label><input name="year" value="{{ a.year }}"></div>
+    <div><label>Medium</label><input name="medium" value="{{ a.medium }}"></div>
+    <div><label>Surface</label><input name="surface" value="{{ a.surface }}"></div>
   </div>
 
   <div class="row">
-    <div><label>Width (mm)</label><input type="number" name="width_mm" value="{{ a.width_mm }}"></div>
-    <div><label>Height (mm)</label><input type="number" name="height_mm" value="{{ a.height_mm }}"></div>
-    <div><label>Depth (mm)</label><input type="number" name="depth_mm" value="{{ a.depth_mm }}"></div>
+    <div><label>Width (cm)</label><input type="number" step="0.1" name="width_cm" value="{{ a.width_cm }}"></div>
+    <div><label>Height (cm)</label><input type="number" step="0.1" name="height_cm" value="{{ a.height_cm }}"></div>
+    <div><label>Depth (cm)</label><input type="number" step="0.1" name="depth_cm" value="{{ a.depth_cm }}"></div>
   </div>
 
-  <div class="row">
-    <div><label>Framed width (mm)</label><input type="number" name="framed_width_mm" value="{{ a.framed_width_mm }}"></div>
-    <div><label>Framed height (mm)</label><input type="number" name="framed_height_mm" value="{{ a.framed_height_mm }}"></div>
-    <div><label>Framed depth (mm)</label><input type="number" name="framed_depth_mm" value="{{ a.framed_depth_mm }}"></div>
-  </div>
+  <label>Description</label>
+  <textarea name="description">{{ a.description }}</textarea>
 
-  <div class="row">
-    <div><label>Edition</label><input name="edition" value="{{ a.edition }}"></div>
-    <div><label>Series</label><input name="series" value="{{ a.series }}"></div>
-    <div><label>Style</label><input name="style" value="{{ a.style }}"></div>
-  </div>
-
-  <label>Subject keywords</label>
-  <input name="subject_keywords" value="{{ a.subject_keywords }}">
-
-  <div class="row">
-    <div><label>Provenance</label><input name="provenance" value="{{ a.provenance }}"></div>
-    <div><label>Location</label><input name="location" value="{{ a.location }}"></div>
-    <div><label>Inventory code</label><input name="inventory_code" value="{{ a.inventory_code }}"></div>
-  </div>
+  <label>Keywords</label>
+  <input name="keywords" value="{{ a.keywords }}">
 
   <div style="margin-top:16px">
     <button class="btn" type="submit">Save changes</button>

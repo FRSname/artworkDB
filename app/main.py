@@ -11,7 +11,7 @@ from sqlmodel import select
 from .db import init_db, get_session, Artwork, Image
 from .utils import ensure_artwork_id, next_artwork_number, save_image_and_thumb, mk_slug, next_image_index
 
-app = FastAPI(title="Art Catalog")
+app = FastAPI(title="Art Catalog (Simple)")
 BASE = Path(__file__).parent
 MEDIA_ROOT = BASE / "media"
 STATIC_ROOT = BASE / "static"
@@ -25,31 +25,23 @@ def on_startup():
     init_db()
 
 @app.get("/")
-def index(request: Request, q: str | None = None, artist: str | None = None, year_from: str | None = None, year_to: str | None = None, style: str | None = None, min_width_mm: int | None = None, max_width_mm: int | None = None):
+def index(request: Request, q: str | None = None, year_from: str | None = None, year_to: str | None = None):
     from sqlmodel import and_, or_
     with get_session() as s:
         stmt = select(Artwork)
         conds = []
         if q:
             like = f"%{q.strip()}%"
-            conds.append(or_(Artwork.title.like(like), Artwork.artist_name.like(like), Artwork.medium.like(like), Artwork.subject_keywords.like(like), Artwork.series.like(like), Artwork.style.like(like)))
-        if artist:
-            conds.append(Artwork.artist_name.like(f"%{artist.strip()}%"))
-        if style:
-            conds.append(Artwork.style.like(f"%{style.strip()}%"))
+            conds.append(or_(Artwork.title.like(like), Artwork.medium.like(like), Artwork.surface.like(like), Artwork.description.like(like), Artwork.keywords.like(like)))
         if year_from:
             conds.append(Artwork.year >= year_from)
         if year_to:
             conds.append(Artwork.year <= year_to)
-        if min_width_mm is not None and str(min_width_mm) != "":
-            conds.append(Artwork.width_mm >= int(min_width_mm))
-        if max_width_mm is not None and str(max_width_mm) != "":
-            conds.append(Artwork.width_mm <= int(max_width_mm))
         if conds:
             stmt = stmt.where(and_(*conds))
         stmt = stmt.order_by(Artwork.id.desc())
         artworks = s.exec(stmt).all()
-    params = {"q": q or "", "artist": artist or "", "year_from": year_from or "", "year_to": year_to or "", "style": style or "", "min_width_mm": min_width_mm or "", "max_width_mm": max_width_mm or ""}
+    params = {"q": q or "", "year_from": year_from or "", "year_to": year_to or ""}
     return templates.TemplateResponse("artworks/list.html", {"request": request, "artworks": artworks, "filters": params})
 
 @app.get("/artworks/new")
@@ -61,23 +53,14 @@ async def create_artwork(
     request: Request,
     artwork_id: str = Form(""),
     title: str = Form(...),
-    artist_name: str = Form(""),
     year: str = Form(""),
     medium: str = Form(""),
     surface: str = Form(""),
-    width_mm: int = Form(0),
-    height_mm: int = Form(0),
-    depth_mm: int = Form(0),
-    framed_width_mm: int = Form(0),
-    framed_height_mm: int = Form(0),
-    framed_depth_mm: int = Form(0),
-    edition: str = Form("Unique"),
-    series: str = Form(""),
-    style: str = Form(""),
-    subject_keywords: str = Form(""),
-    provenance: str = Form(""),
-    location: str = Form(""),
-    inventory_code: str = Form(""),
+    width_cm: float = Form(0.0),
+    height_cm: float = Form(0.0),
+    depth_cm: float = Form(0.0),
+    description: str = Form(""),
+    keywords: str = Form(""),
     image: UploadFile = File(None),
 ):
     if not artwork_id.strip():
@@ -91,28 +74,21 @@ async def create_artwork(
         base_name = f"{artwork_id}_front"
         primary_image_rel, _ = save_image_and_thumb(content, dest_dir, base_name)
 
+    artist_name = "Vladislav Raszyk"
     slug = mk_slug(title, artist_name)
 
     a = Artwork(
         artwork_id=artwork_id,
         title=title.strip(),
-        artist_name=artist_name.strip(),
+        artist_name=artist_name,
         year=year.strip(),
         medium=medium.strip(),
         surface=surface.strip(),
-        width_mm=width_mm,
-        height_mm=height_mm,
-        depth_mm=depth_mm,
-        framed_width_mm=framed_width_mm,
-        framed_height_mm=framed_height_mm,
-        framed_depth_mm=framed_depth_mm,
-        edition=edition.strip(),
-        series=series.strip(),
-        style=style.strip(),
-        subject_keywords=subject_keywords.strip(),
-        provenance=provenance.strip(),
-        location=location.strip(),
-        inventory_code=inventory_code.strip(),
+        width_cm=width_cm,
+        height_cm=height_cm,
+        depth_cm=depth_cm,
+        description=description.strip(),
+        keywords=keywords.strip(),
         primary_image=primary_image_rel,
         web_slug=slug
     )
@@ -143,46 +119,28 @@ async def update_artwork(
     artwork_id: str,
     request: Request,
     title: str = Form(...),
-    artist_name: str = Form(""),
     year: str = Form(""),
     medium: str = Form(""),
     surface: str = Form(""),
-    width_mm: int = Form(0),
-    height_mm: int = Form(0),
-    depth_mm: int = Form(0),
-    framed_width_mm: int = Form(0),
-    framed_height_mm: int = Form(0),
-    framed_depth_mm: int = Form(0),
-    edition: str = Form("Unique"),
-    series: str = Form(""),
-    style: str = Form(""),
-    subject_keywords: str = Form(""),
-    provenance: str = Form(""),
-    location: str = Form(""),
-    inventory_code: str = Form(""),
+    width_cm: float = Form(0.0),
+    height_cm: float = Form(0.0),
+    depth_cm: float = Form(0.0),
+    description: str = Form(""),
+    keywords: str = Form(""),
 ):
     with get_session() as s:
         a = s.exec(select(Artwork).where(Artwork.artwork_id == artwork_id)).first()
         if not a:
             return RedirectResponse(url="/", status_code=302)
         a.title = title.strip()
-        a.artist_name = artist_name.strip()
         a.year = year.strip()
         a.medium = medium.strip()
         a.surface = surface.strip()
-        a.width_mm = width_mm
-        a.height_mm = height_mm
-        a.depth_mm = depth_mm
-        a.framed_width_mm = framed_width_mm
-        a.framed_height_mm = framed_height_mm
-        a.framed_depth_mm = framed_depth_mm
-        a.edition = edition.strip()
-        a.series = series.strip()
-        a.style = style.strip()
-        a.subject_keywords = subject_keywords.strip()
-        a.provenance = provenance.strip()
-        a.location = location.strip()
-        a.inventory_code = inventory_code.strip()
+        a.width_cm = width_cm
+        a.height_cm = height_cm
+        a.depth_cm = depth_cm
+        a.description = description.strip()
+        a.keywords = keywords.strip()
         s.add(a)
         s.commit()
     return RedirectResponse(url=f"/artworks/{artwork_id}", status_code=303)
@@ -258,7 +216,7 @@ def onepager_pdf(artwork_id: str):
         if img_path.exists():
             try:
                 img = ImageReader(str(img_path))
-                box_w, box_h = 90*mm, 90*mm
+                box_w, box_h = 95*mm, 95*mm
                 iw, ih = img.getSize()
                 scale = min(box_w/iw, box_h/ih)
                 w, h = iw*scale, ih*scale
@@ -266,7 +224,7 @@ def onepager_pdf(artwork_id: str):
             except Exception:
                 pass
 
-    meta_x = x + 100*mm
+    meta_x = x + 105*mm
     meta_y = H - 38*mm
     c.setFont("Helvetica", 11)
     def row(label, value):
@@ -274,20 +232,44 @@ def onepager_pdf(artwork_id: str):
         c.setFont("Helvetica-Bold", 11); c.drawString(meta_x, meta_y, f"{label}:")
         c.setFont("Helvetica", 11); c.drawString(meta_x + 35*mm, meta_y, str(value) if value is not None else "")
         meta_y -= 6*mm
-    row("Artwork ID", a.artwork_id)
-    row("Inventory", a.inventory_code)
+    row("Year", a.year)
     row("Medium", a.medium)
     row("Surface", a.surface)
-    row("Size (mm)", f"{a.width_mm} × {a.height_mm} × {a.depth_mm}")
-    row("Framed (mm)", f"{a.framed_width_mm} × {a.framed_height_mm} × {a.framed_depth_mm}")
-    row("Edition", a.edition)
-    row("Series", a.series)
-    row("Style", a.style)
-    row("Keywords", a.subject_keywords)
-    row("Provenance", a.provenance)
-    row("Location", a.location)
+    row("Size (cm)", f"{a.width_cm} × {a.height_cm} × {a.depth_cm}")
+    row("Keywords", a.keywords)
+
+    c.setFont("Helvetica-Bold", 12); c.drawString(x, 40*mm, "Description")
+    c.setFont("Helvetica", 11); text = c.beginText(x, 34*mm)
+    for line in (a.description or "").splitlines() or [""]:
+        text.textLine(line)
+    c.drawText(text)
 
     c.setFont("Helvetica", 9)
     c.drawRightString(W - 20*mm, 15*mm, f"Generated {a.created_at} · {a.web_slug}")
     c.showPage(); c.save()
     return FileResponse(str(p), media_type="application/pdf", filename=f"{artwork_id}.pdf")
+
+@app.post("/artworks/{artwork_id}/delete")
+def delete_artwork(artwork_id: str):
+    with get_session() as s:
+        a = s.exec(select(Artwork).where(Artwork.artwork_id == artwork_id)).first()
+        if a:
+            # delete associated images
+            imgs = s.exec(select(Image).where(Image.artwork_id == artwork_id)).all()
+            for img in imgs:
+                p = Path(img.path.replace("/media", str(MEDIA_ROOT)))
+                t = Path(img.thumb.replace("/media", str(MEDIA_ROOT)))
+                try:
+                    if p.exists(): p.unlink()
+                    if t.exists(): t.unlink()
+                except Exception:
+                    pass
+                s.delete(img)
+            # delete artwork folder
+            folder = MEDIA_ROOT / "artworks" / artwork_id
+            if folder.exists():
+                import shutil
+                shutil.rmtree(folder, ignore_errors=True)
+            s.delete(a)
+            s.commit()
+    return RedirectResponse(url="/", status_code=303)
