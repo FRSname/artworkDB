@@ -4,138 +4,105 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="mb-0">
-                    <i class="fas fa-edit"></i> Edit Artwork: {{ artwork.title }}
-                </h2>
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="mb-0">
+          <i class="fas fa-edit"></i> Edit Artwork: {{ artwork.title }}
+        </h2>
+      </div>
+      <div class="card-body">
+        <form method="post"
+              action="/artworks/{{ artwork.artwork_id }}/edit"
+              enctype="multipart/form-data">
+
+          <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title"
+                   value="{{ artwork.title }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="year" class="form-label">Year</label>
+            <input type="text" class="form-control" id="year" name="year"
+                   value="{{ artwork.year or '' }}">
+          </div>
+
+          <div class="mb-3">
+            <label for="medium" class="form-label">Medium</label>
+            <input type="text" class="form-control" id="medium" name="medium"
+                   value="{{ artwork.medium or '' }}">
+          </div>
+
+          <div class="mb-3">
+            <label for="surface" class="form-label">Surface</label>
+            <input type="text" class="form-control" id="surface" name="surface"
+                   value="{{ artwork.surface or '' }}">
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="width_cm" class="form-label">Width (cm)</label>
+                <input type="number" class="form-control" id="width_cm"
+                       name="width_cm" step="0.1" min="0"
+                       value="{{ artwork.width_cm }}">
+              </div>
             </div>
-            <div class="card-body">
-                <form method="post" enctype="multipart/form-data">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="artwork_id" class="form-label">Artwork ID</label>
-                                <input type="text" class="form-control" value="{{ artwork.artwork_id }}" disabled>
-                                <div class="form-text">ID cannot be changed</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="year" class="form-label">Year</label>
-                                <input type="text" class="form-control" id="year" name="year" 
-                                       value="{{ artwork.year or '' }}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="title" name="title" 
-                               value="{{ artwork.title }}" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="artist_name" class="form-label">Artist Name</label>
-                        <input type="text" class="form-control" id="artist_name" name="artist_name" 
-                               value="{{ artwork.artist_name }}" required>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="medium" class="form-label">Medium</label>
-                                <input type="text" class="form-control" id="medium" name="medium" 
-                                       value="{{ artwork.medium or '' }}">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="surface" class="form-label">Surface</label>
-                                <input type="text" class="form-control" id="surface" name="surface" 
-                                       value="{{ artwork.surface or '' }}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="width_cm" class="form-label">Width (cm)</label>
-                                <input type="number" class="form-control" id="width_cm" name="width_cm" 
-                                       step="0.1" min="0" value="{{ artwork.width_cm }}">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="height_cm" class="form-label">Height (cm)</label>
-                                <input type="number" class="form-control" id="height_cm" name="height_cm" 
-                                       step="0.1" min="0" value="{{ artwork.height_cm }}">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="depth_cm" class="form-label">Depth (cm)</label>
-                                <input type="number" class="form-control" id="depth_cm" name="depth_cm" 
-                                       step="0.1" min="0" value="{{ artwork.depth_cm }}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="3">{{ artwork.description or '' }}</textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="keywords" class="form-label">Keywords</label>
-                        <input type="text" class="form-control" id="keywords" name="keywords" 
-                               value="{{ artwork.keywords or '' }}">
-                    </div>
-
-                    {% if images %}
-                    <div class="mb-3">
-                        <label class="form-label">Current Images</label>
-                        <div class="row">
-                            {% for image in images %}
-                            <div class="col-md-3 mb-2">
-                                <div class="card">
-                                    <img src="{{ image.thumb or image.path }}" class="card-img-top" 
-                                         style="height: 120px; object-fit: cover;">
-                                    <div class="card-body p-2">
-                                        <small class="text-muted">{{ image.view|title }}</small>
-                                        <form method="post" action="/images/{{ image.id }}/delete" 
-                                              onsubmit="return confirm('Delete this image?')">
-                                            <button type="submit" class="btn btn-danger btn-sm w-100 mt-1">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <div class="mb-3">
-                        <label for="new_images" class="form-label">Add New Images</label>
-                        <input type="file" class="form-control" id="new_images" name="new_images" 
-                               multiple accept="image/*">
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <a href="/artworks/{{ artwork.artwork_id }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Back
-                        </a>
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save"></i> Update Artwork
-                        </button>
-                    </div>
-                </form>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="height_cm" class="form-label">Height (cm)</label>
+                <input type="number" class="form-control" id="height_cm"
+                       name="height_cm" step="0.1" min="0"
+                       value="{{ artwork.height_cm }}">
+              </div>
             </div>
-        </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="depth_cm" class="form-label">Depth (cm)</label>
+                <input type="number" class="form-control" id="depth_cm"
+                       name="depth_cm" step="0.1" min="0"
+                       value="{{ artwork.depth_cm }}">
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description"
+                      rows="3">{{ artwork.description or '' }}</textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="keywords" class="form-label">Keywords</label>
+            <input type="text" class="form-control" id="keywords"
+                   name="keywords" value="{{ artwork.keywords or '' }}">
+          </div>
+
+          <!-- Optional hidden artist (backend defaults if missing) -->
+          <input type="hidden" name="artist_name"
+                 value="{{ artwork.artist_name or 'Vladislav Raszyk' }}">
+
+          <!-- Optional: file upload if you want to add images during edit -->
+          <div class="mb-3">
+            <label for="new_images" class="form-label">Add images</label>
+            <input type="file" class="form-control" id="new_images"
+                   name="new_images" accept="image/*" multiple>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <a href="/artworks/{{ artwork.artwork_id }}"
+               class="btn btn-secondary">
+              <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-save"></i> Update Artwork
+            </button>
+          </div>
+
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}

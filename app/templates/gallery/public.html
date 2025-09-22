@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if artwork %}{{ artwork.title }} - {% endif %}Vladislav Raszyk Gallery</title>
+    <meta name="description" content="{% if artwork %}{{ artwork.description[:150] }}{% else %}Explore the artistic portfolio of Vladislav Raszyk. Contemporary paintings, drawings and mixed media artwork.{% endif %}">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="{% if artwork %}article{% else %}website{% endif %}">
+    <meta property="og:title" content="{% if artwork %}{{ artwork.title }} - {% endif %}Vladislav Raszyk Gallery">
+    <meta property="og:description" content="{% if artwork %}{{ artwork.description[:150] }}{% else %}Contemporary art portfolio featuring paintings, drawings and mixed media work.{% endif %}">
+    {% if artwork and artwork.primary_image %}
+    <meta property="og:image" content="{{ request.base_url.rstrip('/') }}{{ artwork.primary_image }}">
+    {% endif %}
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #1a1a1a;
+            --accent-color: #6366f1;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+            --background-light: #f9fafb;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--primary-color);
+            background: white;
+        }
+        
+        /* Header */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+        }
+        
+        /* Search and Filter Section */
+        .search-section {
+            background: var(--background-light);
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            border-radius: 50px;
+            padding: 1rem 3rem 1rem 1.5rem;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            width: 100%;
+            background: white;
+        }
+        
+        .search-box input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .search-box .search-icon {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+        
+        /* Category Filter */
+        .category-filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        
+        .category-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            border: 2px solid transparent;
+            background: white;
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .category-badge:hover,
+        .category-badge.active {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 3rem 0;
+        }
+        
+        .artwork-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .artwork-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .artwork-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: var(--background-light);
+        }
+        
+        .artwork-info {
+            padding: 1.5rem;
+        }
+        
+        .artwork-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        .artwork-meta {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .artwork-categories {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .category-tag {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: white;
+            font-weight: 500;
+        }
+        
+        /* View Controls */
+        .view-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .results-count {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .view-btn {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--text-light);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .view-btn.active,
+        .view-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        
+        /* List View */
+        .gallery-list .artwork-card {
+            display: flex;
+            margin-bottom: 1.5rem;
+        }
+        
+        .gallery-list .artwork-image {
+            width: 200px;
+            height: 150px;
+            flex-shrink: 0;
+        }
+        
+        .gallery-list .artwork-info {
+            flex: 1;
+            padding: 1rem 1.5rem;
+        }
+        
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            cursor: pointer;
+        }
+        
+        .lightbox-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+            cursor: default;
+        }
+        
+        .lightbox img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        
+        /* Loading States */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--border-color);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: 1fr;
+                padding: 2rem 0;
+            }
+            
+            .gallery-list .artwork-card {
+                flex-direction: column;
+            }
+            
+            .gallery-list .artwork-image {
+                width: 100%;
+                height: 200px;
+            }
+            
+            .category-filters {
+                justify-content: center;
+            }
+            
+            .view-controls {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-light);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/gallery">
+                <i class="fas fa-palette me-2"></i>
+                Vladislav Raszyk
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/gallery">Gallery</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/gallery/about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/gallery/contact">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main style="margin-top: 80px;">
+        {% block content %}
+        
+        <!-- Search and Filter Section -->
+        <section class="search-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Search artworks by title, description, or medium...">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                        <div class="category-filters" id="categoryFilters">
+                            <div class="category-badge active" data-category="all">
+                                All Works
+                            </div>
+                            <!-- Categories will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Gallery Section -->
+        <section class="gallery-section">
+            <div class="container">
+                <div class="view-controls">
+                    <div class="results-count">
+                        <span id="resultsCount">Loading...</span>
+                    </div>
+                    <div class="view-toggle">
+                        <button class="view-btn active" id="gridView" title="Grid View">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="view-btn" id="listView" title="List View">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="loadingState" class="loading">
+                    <div class="spinner"></div>
+                    <p class="mt-3">Loading artworks...</p>
+                </div>
+                
+                <!-- Gallery Grid -->
+                <div id="galleryContainer" class="gallery-grid">
+                    <!-- Artworks will be loaded here -->
+                </div>
+                
+                <!-- Empty State -->
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <i class="fas fa-search"></i>
+                    <h3>No artworks found</h3>
+                    <p>Try adjusting your search terms or filters</p>
+                </div>
+            </div>
+        </section>
+        
+        {% endblock %}
+    </main>
+    
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox">
+        <div class="lightbox-close">&times;</div>
+        <div class="lightbox-content">
+            <img id="lightboxImage" src="" alt="">
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class GalleryApp {
+            constructor() {
+                this.artworks = [];
+                this.categories = [];
+                this.filteredArtworks = [];
+                this.currentCategory = 'all';
+                this.currentView = 'grid';
+                this.searchQuery = '';
+                
+                this.init();
+            }
+            
+            async init() {
+                await this.loadData();
+                this.setupEventListeners();
+                this.renderCategories();
+                this.filterAndRender();
+            }
+            
+            async loadData() {
+                try {
+                    // Load artworks and categories
+                    const [artworksResponse, categoriesResponse] = await Promise.all([
+                        fetch('/api/gallery/artworks'),
+                        fetch('/api/gallery/categories')
+                    ]);
+                    
+                    this.artworks = await artworksResponse.json();
+                    this.categories = await categoriesResponse.json();
+                    
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                    this.showError('Failed to load gallery. Please try again.');
+                }
+            }
+            
+            setupEventListeners() {
+                // Search
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    this.searchQuery = e.target.value.toLowerCase();
+                    this.filterAndRender();
+                });
+                
+                // View toggle
+                document.getElementById('gridView').addEventListener('click', () => this.setView('grid'));
+                document.getElementById('listView').addEventListener('click', () => this.setView('list'));
+                
+                // Lightbox
+                document.getElementById('lightbox').addEventListener('click', (e) => {
+                    if (e.target.id === 'lightbox' || e.target.classList.contains('lightbox-close')) {
+                        this.closeLightbox();
+                    }
+                });
+                
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') this.closeLightbox();
+                });
+            }
+            
+            renderCategories() {
+                const container = document.getElementById('categoryFilters');
+                
+                // Keep the "All Works" button and add categories
+                const categoryHTML = this.categories.map(cat => `
+                    <div class="category-badge" 
+                         data-category="${cat.slug}" 
+                         style="border-color: ${cat.color};">
+                        ${cat.name}
+                    </div>
+                `).join('');
+                
+                // Add to existing content (after "All Works")
+                container.innerHTML = `
+                    <div class="category-badge active" data-category="all">All Works</div>
+                    ${categoryHTML}
+                `;
+                
+                // Add click handlers
+                container.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('category-badge')) {
+                        this.setCategory(e.target.dataset.category);
+                    }
+                });
+            }
+            
+            setCategory(category) {
+                this.currentCategory = category;
+                
+                // Update active state
+                document.querySelectorAll('.category-badge').forEach(badge => {
+                    badge.classList.toggle('active', badge.dataset.category === category);
+                    if (badge.classList.contains('active') && category !== 'all') {
+                        const cat = this.categories.find(c => c.slug === category);
+                        if (cat) badge.style.backgroundColor = cat.color;
+                    } else if (category === 'all' && badge.dataset.category === 'all') {
+                        badge.style.backgroundColor = '#6366f1';
+                    } else {
+                        badge.style.backgroundColor = 'white';
+                    }
+                });
+                
+                this.filterAndRender();
+            }
+            
+            setView(view) {
+                this.currentView = view;
+                
+                // Update buttons
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(view + 'View').classList.add('active');
+                
+                // Update container class
+                const container = document.getElementById('galleryContainer');
+                container.className = view === 'grid' ? 'gallery-grid' : 'gallery-list';
+                
+                this.renderArtworks();
+            }
+            
+            filterAndRender() {
+                this.filteredArtworks = this.artworks.filter(artwork => {
+                    // Category filter
+                    let categoryMatch = this.currentCategory === 'all' || 
+                        artwork.categories.some(cat => cat.slug === this.currentCategory);
+                    
+                    // Search filter
+                    let searchMatch = !this.searchQuery || 
+                        artwork.title.toLowerCase().includes(this.searchQuery) ||
+                        artwork.description.toLowerCase().includes(this.searchQuery) ||
+                        artwork.medium.toLowerCase().includes(this.searchQuery) ||
+                        artwork.keywords.toLowerCase().includes(this.searchQuery);
+                    
+                    return categoryMatch && searchMatch;
+                });
+                
+                this.updateResultsCount();
+                this.renderArtworks();
+            }
+            
+            updateResultsCount() {
+                const count = this.filteredArtworks.length;
+                const text = count === 1 ? '1 artwork' : `${count} artworks`;
+                document.getElementById('resultsCount').textContent = text;
+            }
+            
+            renderArtworks() {
+                const container = document.getElementById('galleryContainer');
+                const loadingState = document.getElementById('loadingState');
+                const emptyState = document.getElementById('emptyState');
+                
+                loadingState.style.display = 'none';
+                
+                if (this.filteredArtworks.length === 0) {
+                    container.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                emptyState.style.display = 'none';
+                container.style.display = this.currentView === 'grid' ? 'grid' : 'block';
+                
+                container.innerHTML = this.filteredArtworks.map(artwork => this.renderArtworkCard(artwork)).join('');
+                
+                // Add click handlers for artwork cards
+                container.addEventListener('click', (e) => {
+                    const card = e.target.closest('.artwork-card');
+                    if (card) {
+                        const artworkId = card.dataset.artworkId;
+                        const artwork = this.artworks.find(a => a.artwork_id === artworkId);
+                        if (artwork && artwork.primary_image) {
+                            this.openLightbox(artwork);
+                        }
+                    }
+                });
+            }
+            
+            renderArtworkCard(artwork) {
+                const categoriesHTML = artwork.categories.map(cat => 
+                    `<span class="category-tag" style="background-color: ${cat.color}">${cat.name}</span>`
+                ).join('');
+                
+                const imageUrl = artwork.primary_image || '/static/placeholder.jpg';
+                const dimensions = artwork.width_cm && artwork.height_cm ? 
+                    `${artwork.width_cm} × ${artwork.height_cm} cm` : '';
+                
+                return `
+                    <div class="artwork-card" data-artwork-id="${artwork.artwork_id}">
+                        <img src="${imageUrl}" alt="${artwork.title}" class="artwork-image" loading="lazy">
+                        <div class="artwork-info">
+                            <h3 class="artwork-title">${artwork.title}</h3>
+                            <div class="artwork-meta">
+                                ${artwork.year ? artwork.year + ' • ' : ''}${artwork.medium}
+                                ${dimensions ? ' • ' + dimensions : ''}
+                            </div>
+                            ${artwork.description ? `<p class="artwork-description text-muted small">${artwork.description.substring(0, 100)}${artwork.description.length > 100 ? '...' : ''}</p>` : ''}
+                            <div class="artwork-categories">
+                                ${categoriesHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            openLightbox(artwork) {
+                const lightbox = document.getElementById('lightbox');
+                const image = document.getElementById('lightboxImage');
+                
+                image.src = artwork.primary_image;
+                image.alt = artwork.title;
+                lightbox.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                
+                // Track view
+                this.trackView(artwork.artwork_id);
+            }
+            
+            closeLightbox() {
+                document.getElementById('lightbox').style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+            
+            async trackView(artworkId) {
+                try {
+                    await fetch(`/api/gallery/artworks/${artworkId}/view`, {
+                        method: 'POST'
+                    });
+                } catch (error) {
+                    // Silent fail - view tracking is not critical
+                }
+            }
+            
+            showError(message) {
+                const container = document.getElementById('galleryContainer');
+                container.innerHTML = `
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new GalleryApp();
+        });
+    </script>
+</body>
+</html>
